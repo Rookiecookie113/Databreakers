@@ -16,12 +16,15 @@ q = FlamebackCaterData(cursor, conn)
 print(q.get_all_suppliers())
 print(q.get_all_inventory_items())
 print(q.get_all_recipe_ingredients())
+print(q.get_all_recipes())
+print(q.get_all_menu_items())
 print(q.get_all_order_details())
 print(q.get_all_orders())
 print(q.get_all_customers())
 
+
 #checking CUD Operations in RecipeIngredients
-print(q.add_recipe_ingredient(2, 7, 5))
+print(q.add_recipe_ingredient(2, 5, 5))
 conn.commit()
 
 print(q.update_recipe_ingredient(4, 10))
