@@ -6,23 +6,41 @@ conn = mysql.connector.connect(
     host='localhost',
     user='root',
     password='',
-    database='bsg_db'
+    database='flamebackcater_db'
 )
 cursor = conn.cursor()
 
 q = FlamebackCaterData(cursor, conn)
 
-print(q.get_all_people_cert())
-print(q.cnt_cert_person('byp'))
+#checking the select statements for all tables
+print(q.get_all_suppliers())
+print(q.get_all_inventory_items())
+print(q.get_all_recipe_ingredients())
+print(q.get_all_order_details())
+print(q.get_all_orders())
+print(q.get_all_customers())
 
-print(q.add_cert_person(2, 7))
+#checking CUD Operations in RecipeIngredients
+print(q.add_recipe_ingredient(2, 7, 5))
 conn.commit()
 
-print(q.update_cert(4, 7))
+print(q.update_recipe_ingredient(4, 10))
 conn.commit()
 
-print(q.delete_cert(4, 7))
+print(q.delete_recipe_ingredient(4))
 conn.commit()
+
+
+#Checking CUD Operations in OrderDetails
+print(q.add_order_detail(1, 2, 3, 4))
+conn.commit()
+
+print(q.update_order_detail(1, 2))
+conn.commit()
+
+print(q.delete_order_detail(1))
+conn.commit()
+
 
 cursor.close()
 conn.close()
