@@ -1,0 +1,17 @@
+Project Title: Flameback Catering System (Project Group 12)
+
+Authors: Hurrsh Misttry, Tetsuya Bassler, Alan Dickey
+
+Description: Flameback Catering System is implementing a Python application for users to interact with 
+the database without touching the actual SQL code that should only be contained in the Data Layer. This application 
+aims to move away from the old processes of logging company data on paper and spreadsheet into a more 
+efficient and easy to use system with a database and application for users to interact with.
+
+
+Installation/Dependency Instructions:
+
+Steps to Run Application:
+
+Expected Output:
+
+Citations:
