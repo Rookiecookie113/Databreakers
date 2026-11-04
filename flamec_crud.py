@@ -1,171 +1,172 @@
-import mysql.connector
+import mysql.connector as m
 
+class FlamebackCaterData:
+	"""Provide controlled access to the Flameback Catering DB"""
+	def __init__(self, host, user, password, database):
+		self._connection = m.connect(
+			host=host,
+			user=user,
+			password=password,
+			database=database
+		)
+		try:
+			self._cursor = self._connection.cursor()
+		except m.Error:
+			self._connection.close()
+			raise
 
-class FlamebackCaterData(object):
+	def close(self):
+		"""Release the DB cursor and connection"""
+		try:
+			self._cursor.close()
+		finally:
+			self._connection.close()
 
-    def __init__(self, cursor, connection=None):
-        self.cursor = cursor
-        self.connection = connection
+	def _fetch_all(self, sql, parameters=()):
+		"""Execute a SELECT query and return its rows"""
+		self._cursor.execute(sql, parameters)
+		return self._cursor.fetchall()
+	
+	def _select(self, table, columns=None, **filters):
+		"""Build a SELECT using application defined tables and filters"""
+		if columns is None:
+			selected_columns = "*"
+		else:
+			if isinstance(columns, str):
+				columns = (columns,)
+			if not isinstance(columns, (tuple, list)) or not columns:
+				raise ValueError("Columns must be a nonempty tuple or list")
+			for column in columns:
+				if not isinstance(column, str) or not column.isidentifier():
+					raise ValueError(f"Invalid column name: {column}")
+			selected_columns = ", ".join(f"{column}" for column in columns)
 
-    def _commit(self):
-        """Commit if a connection object was provided."""
-        if self.connection is not None:
-            self.connection.commit()
+		sql = f"SELECT {selected_columns} FROM {table}"
+		conditions = []
+		parameters = []
 
-        
-    #Grabs all data from the Suppliers Entity
-    def get_all_suppliers(self):
-        cursor = self.cursor
-        sql = """
-        SELECT * FROM Suppliers
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+		for column, value in filters.items():
+			if value is not None:
+				conditions.append(f"{column} = %s")
+				parameters.append(value)
+		if conditions:
+			sql += " WHERE " + " AND ".join(conditions)
+		return self._fetch_all(sql + ";", tuple(parameters))
 
-    #Grabs all data from the InventoryItems Entity
-    def get_all_inventory_items(self):
-        cursor = self.cursor
-        sql = """
-        SELECT * FROM InventoryItems
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+	def _execute_write(self, sql, parameters):
+		"""Commit a write and return its row count and generated id"""
+		try:
+			self._cursor.execute(sql, parameters)
+			affected_rows = self._cursor.rowcount
+			inserted_id = self._cursor.lastrowid
+			self._connection.commit()
+			return affected_rows, inserted_id
+		except m.Error:
+			self._connection.rollback()
+			raise
 
-    
-    #Performing CRUD operations on RecipeIngredients Intersection Table
-    def get_all_recipe_ingredients(self):
-        cursor = self.cursor
-        sql = """
-        SELECT * FROM RecipeIngredients
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+	def _save(self, table, primary_key, values, record_id=None):
+		"""Insert or Update values supplied by an application method"""
+		if not values:
+			raise ValueError("At least one value is required")
+		columns = tuple(values)
+		parameters = tuple(values[column] for column in columns)
+		if record_id is None:
+			column_names = ", ".join(f"{column}" for column in columns)
+			placeholders = ", ".join("%s" for _ in columns)
+			sql = (
+				f"INSERT INTO {table} ({column_names}) "
+				f"VALUES ({placeholders});"
+			)
+		else:
+			assignments = ", ".join(f"{column} = %s" for column in columns)
+			sql = (
+				f"UPDATE {table} SET {assignments} "
+				f"WHERE {primary_key} = %s;"
+			)
+			parameters += (record_id,)
 
-    def add_recipe_ingredient(self, r=None, i=None, q=None):
-        cursor = self.cursor
-                
-        try:
-            sql = """
-            INSERT INTO RecipeIngredients (recipe_id, ingredient_id, quantity_needed)
-            VALUES (%s, %s, %s);
-            """
-            cursor.execute(sql, (r, i, q))
-            self._commit()
-            rowcount = cursor.rowcount
-            return rowcount
-        except mysql.connector.Error as err:
-            if err.errno == 1062:
-                return "Trying to insert duplicate data"
-        pass
+		affected_rows, inserted_id = self._execute_write(sql, parameters)
+		if record_id is None:
+			record_id = inserted_id
+		
+		return {
+			"id": record_id,
+			"affected_rows": affected_rows
+		}
+	
+	def _delete(self, table, primary_key, record_id):
+		"""Delete one record using an application defined primary key"""
+		if record_id is None:
+			raise ValueError("A record ID is rquired for deletion")
+		sql = (
+			f"DELETE FROM {table} "
+			f"WHERE {primary_key} = %s;"
+		)
 
-    def update_recipe_ingredient(self, r=None, q=None):
-        cursor = self.cursor
-        sql = """
-        UPDATE RecipeIngredients SET quantity_needed = %s WHERE recipe_ingredients_id = %s
-        """
-        cursor.execute(sql, (q, r))
-        self._commit()
-        rowcount = cursor.rowcount
-        return rowcount
+		affected_rows, _ = self._execute_write(sql, (record_id,))
 
-    def delete_recipe_ingredient(self, c=None):
-        cursor = self.cursor
-        sql = """
-        DELETE FROM RecipeIngredients WHERE recipe_ingredients_id = %s
-        """
-        cursor.execute(sql, (c,))
-        self._commit()
-        rowcount = cursor.rowcount
-        return rowcount
+		return affected_rows
 
-    
-    #Grabbing all data from Recipes Entity
-    def get_all_recipes(self):
-        cursor = self.cursor
-        sql = """
-        SELECT * FROM Recipes
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+	# Read ops for all tables
+	def get_suppliers(self, supplier_id=None, columns=None):
+		return self._select("Suppliers", columns, supplier_id=supplier_id)
 
-    #Grabs all data from the MenuItems Entity
-    def get_all_menu_items(self):
-        cursor = self.cursor
-        sql = """
-        SELECT * FROM MenuItems
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+	def get_inventory_items(self, ingredient_id=None, supplier_id=None, columns=None):
+		return self._select("InventoryItems", columns, ingredient_id=ingredient_id, supplier_id=supplier_id)
 
-    #Performing CRUD operations on OrderDetails Intersection Table
-    def get_all_order_details(self):
-        cursor = self.cursor
-        sql = """
-        SELECT * FROM OrderDetails
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+	def get_recipes(self, recipe_id=None, columns=None):
+		return self._select("Recipes", columns, recipe_id=recipe_id)
 
-    def add_order_detail(self, o=None, m=None, q=None, t=None):
-        cursor = self.cursor
-                        
-        try:
-            sql = """
-            INSERT INTO OrderDetails (order_id, menu_id, quantity_ordered, total_cost)
-            VALUES (%s, %s, %s, %s);
-            """
-            cursor.execute(sql, (o, m, q, t))
-            self._commit()
-            rowcount = cursor.rowcount
-            return rowcount
-        except mysql.connector.Error as err:
-            if err.errno == 1062:
-                return "Trying to insert duplicate data"
-            pass
+	def get_recipe_ingredients(self, recipe_ingredient_id=None, recipe_id=None, ingredient_id=None, columns=None):
+		return self._select("RecipeIngredients", columns, recipe_ingredients_id=recipe_ingredient_id, recipe_id=recipe_id, ingredient_id=ingredient_id)
 
-    def update_order_detail(self, o=None, q=None, t=None):
-        cursor = self.cursor
-        sql = """
-        UPDATE OrderDetails SET quantity_ordered = %s, total_cost = %s WHERE order_details_id = %s
-        """
-        cursor.execute(sql, (q, t, o))
-        self._commit()
-        rowcount = cursor.rowcount
-        return rowcount
+	def get_menu_items(self, menu_id=None, recipe_id=None, availability=None, columns=None):
+		return self._select("MenuItems", columns, menu_id=menu_id, recipe_id=recipe_id, availability=availability)
 
-    def delete_order_detail(self, c=None):
-        cursor = self.cursor
-        sql = """
-        DELETE FROM OrderDetails WHERE order_details_id = %s
-        """
-        cursor.execute(sql, (c,))
-        self._commit()
-        rowcount = cursor.rowcount
-        return rowcount
+	def get_customers(self, customer_id=None, columns=None):
+		return self._select("Customers", columns, customer_id=customer_id)
 
+	def get_orders(self, order_id=None, customer_id=None, columns=None):
+		return self._select("Orders", columns, order_id=order_id, customer_id=customer_id)
 
-    #Grabbing all data from Orders Entity
-    def get_all_orders(self):
-        cursor = self.cursor
-        sql = """ 
-        SELECT * FROM Orders
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+	def get_order_details(self, order_detail_id=None, order_id=None, menu_id=None, columns=None):
+		return self._select("OrderDetails", columns, order_details_id=order_detail_id, order_id=order_id, menu_id=menu_id)
 
-    #Grabbing all data from Customers Entity
-    def get_all_customers(self):
-        cursor = self.cursor
-        sql = """
-        SELECT * FROM Customers
-        """
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results  
+	# create, update, and delete operations
+	def save_recipe_ingredient(self, recipe_id, ingredient_id, quantity, recipe_ingredient_id=None):
+		"""Insert or update one recipe-ingredient relationship"""
+		values = {
+			"recipe_id": recipe_id,
+			"ingredient_id": ingredient_id,
+			"quantity_needed": quantity
+		}
+
+		return self._save("RecipeIngredients", "recipe_ingredients_id", values, record_id=recipe_ingredient_id)
+
+	def save_order_details(self, order_id, menu_id, quantity, total_cost, order_detail_id=None):
+		"""Insert or update one order line"""
+		values = {
+			"order_id": order_id,
+			"menu_id": menu_id,
+			"quantity_ordered": quantity,
+			"total_cost": total_cost
+		}
+
+		return self._save("OrderDetails", "order_details_id", values, record_id=order_detail_id)
+
+	def delete_recipe_ingredients(self, recipe_ingredient_id):
+		"""Delete one recipe-ingredient relationship"""
+		return self._delete(
+			"RecipeIngredients",
+			"recipe_ingredients_id",
+			recipe_ingredient_id
+		)
+
+	def delete_order_detail(self, order_detail_id):
+		"""Delete one order line"""
+		return self._delete(
+			"OrderDetails",
+			"order_details_id",
+			order_detail_id
+		)
