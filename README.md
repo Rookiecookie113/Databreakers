@@ -15,7 +15,7 @@ The database keeps track of suppliers, inventory items, recipes, recipe ingredie
 
 | File | Description |
 |------|-------------|
-| `DDL for project step 2.sql` | Creates the database tables and adds the sample data. |
+| `flamec_ddl.sql` | Creates the database tables and adds the sample data. |
 | `flamec_crud.py` | Contains the `FlamebackCaterData` class and handles all SQL queries. |
 | `flamec_crudtest.py` | Runs tests for each data layer method and displays the results. |
 | `flamec_dml.sql` | Contains a reference list of the SQL queries used in the data layer. It uses `:variable` placeholders, so it is not meant to be run directly. |
