@@ -77,7 +77,7 @@ Follow these steps to set up the database and run the tests.
 
 ## Expected Output
 
-The first 8 lines of output show the contents of each database table. They appear in the following order: Suppliers, InventoryItems, RecipeIngredients, Recipes, MenuItems, OrderDetails, Orders, and Customers.
+The example below comes from an earlier version of the test script and shows similar sample data. The current version includes PASS messages and displays the tables in a different order. The tables shown below are: Suppliers, InventoryItems, RecipeIngredients, Recipes, MenuItems, OrderDetails, Orders, and Customers.
 
 ```text
 [(1, 'Valley Poultry', '541-737-1000'), (2, 'Benton Produce', '541-737-8787'), (3, 'Cascade Foods', '541-737-4331')]
