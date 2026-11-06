@@ -72,7 +72,7 @@ def main():
 		host="localhost",
 		user=input("MySQL user [root]: ").strip() or "root",
 		password=getpass("MySQL pwd: "),
-		database="flamebackceter_test"
+		database="flamebackcater_test"
 	)
 
 	try:
