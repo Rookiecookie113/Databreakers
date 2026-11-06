@@ -57,11 +57,7 @@ Follow these steps to set up the database and run the tests.
    SOURCE flamec_ddl.sql;
    ```
 
-3. **Update your database credentials.**
-
-   Open `flamec_crudtest.py` and find the `mysql.connector.connect(...)` section. Update the `host`, `user`, and `password` values to match your local MySQL setup.
-
-4. **Run the test script.**
+3. **Run the test script.**
 
    Open a terminal in the project folder and run:
 
