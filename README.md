@@ -20,6 +20,7 @@ The database keeps track of suppliers, inventory items, recipes, recipe ingredie
 | `flamec_crudtest.py` | Runs tests for each data layer method and displays the results. |
 | `flamec_dml.sql` | Contains a reference list of the SQL queries used in the data layer. It uses `:variable` placeholders, so it is not meant to be run directly. |
 | `CLI_OUT.txt` | Contains the saved output from a test run. |
+| `CLI_OUT_VERBOSE.txt` | Contains the saved verbose output from a test run. |
 
 ## Installation and Dependencies
 
@@ -44,8 +45,8 @@ Follow these steps to set up the database and run the tests.
    Log into MySQL and run the following commands:
 
    ```sql
-   CREATE DATABASE flamebackcater_db;
-   USE flamebackcater_db;
+   CREATE DATABASE IF NOT EXISTS flamebackcater_test;
+   USE flamebackcater_test;
    ```
 
 2. **Create the tables and load the sample data.**
@@ -53,7 +54,7 @@ Follow these steps to set up the database and run the tests.
    From the MySQL prompt, run the following command from the project folder:
 
    ```sql
-   SOURCE DDL for project step 2.sql;
+   SOURCE flamec_ddl.sql;
    ```
 
 3. **Update your database credentials.**
@@ -66,6 +67,10 @@ Follow these steps to set up the database and run the tests.
 
    ```bash
    python flamec_crudtest.py
+   ```
+   or
+   ```bash
+   python flamec_crudtest.py -v
    ```
 
 **Important:** The test script makes changes to the database by inserting, updating, and deleting records. If you want to get the same results each time you run it, reload the DDL file from step 2 before running the tests again.
