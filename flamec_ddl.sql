@@ -72,7 +72,7 @@ CREATE TABLE RecipeIngredients (
 	CONSTRAINT fk_recipeingredients_ingredient
 		FOREIGN KEY (ingredient_id)
 		REFERENCES InventoryItems (ingredient_id)
-		ON DELETE CASCADE
+		ON DELETE RESTRICT
 		ON UPDATE CASCADE,
 
 	CONSTRAINT chk_recipeingredients_quantity
@@ -93,7 +93,7 @@ CREATE TABLE MenuItems (
 	CONSTRAINT fk_menu_recipe
 		FOREIGN KEY (recipe_id)
 		REFERENCES Recipes (recipe_id)
-		ON DELETE CASCADE
+		ON DELETE RESTRICT
 		ON UPDATE CASCADE,
 
 	CONSTRAINT chk_menu_price
@@ -115,13 +115,13 @@ DROP TABLE IF EXISTS Orders;
 CREATE TABLE Orders (
 	order_id INT(11) NOT NULL AUTO_INCREMENT,
 	customer_id INT(11) NOT NULL,
-	order_date DATETIME NOT NULL,
+	order_date DATE NOT NULL,
 	PRIMARY KEY (order_id),
 
 	CONSTRAINT fk_orders_customer
 		FOREIGN KEY (customer_id)
 		REFERENCES Customers (customer_id)
-		ON DELETE CASCADE
+		ON DELETE RESTRICT
 		ON UPDATE CASCADE
 );
 
@@ -147,7 +147,7 @@ CREATE TABLE OrderDetails (
 	CONSTRAINT fk_orderdetails_menu
 		FOREIGN KEY (menu_id)
 		REFERENCES MenuItems (menu_id)
-		ON DELETE CASCADE
+		ON DELETE RESTRICT
 		ON UPDATE CASCADE,
 
 	CONSTRAINT chk_orderdetails_quantity
@@ -232,7 +232,6 @@ VALUES
 	(3, 3, 3, 3, 20.97),
 	(4, 1, 2, 2, 5.50),
 	(5, 3, 1, 1, 4.50);
-
 
 -- closing
 COMMIT;

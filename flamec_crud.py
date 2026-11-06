@@ -110,28 +110,68 @@ class FlamebackCaterData:
 
 	# Read ops for all tables
 	def get_suppliers(self, supplier_id=None, columns=None):
-		return self._select("Suppliers", columns, supplier_id=supplier_id)
+		return self._select(
+			"Suppliers",
+			columns,
+			supplier_id=supplier_id
+		)
 
 	def get_inventory_items(self, ingredient_id=None, supplier_id=None, columns=None):
-		return self._select("InventoryItems", columns, ingredient_id=ingredient_id, supplier_id=supplier_id)
+		return self._select(
+			"InventoryItems",
+			columns,
+			ingredient_id=ingredient_id,
+			supplier_id=supplier_id
+		)
 
 	def get_recipes(self, recipe_id=None, columns=None):
-		return self._select("Recipes", columns, recipe_id=recipe_id)
+		return self._select(
+			"Recipes",
+			columns,
+			recipe_id=recipe_id
+		)
 
 	def get_recipe_ingredients(self, recipe_ingredient_id=None, recipe_id=None, ingredient_id=None, columns=None):
-		return self._select("RecipeIngredients", columns, recipe_ingredients_id=recipe_ingredient_id, recipe_id=recipe_id, ingredient_id=ingredient_id)
+		return self._select(
+			"RecipeIngredients",
+			columns,
+			recipe_ingredients_id=recipe_ingredient_id,
+			recipe_id=recipe_id,
+			ingredient_id=ingredient_id
+		)
 
 	def get_menu_items(self, menu_id=None, recipe_id=None, availability=None, columns=None):
-		return self._select("MenuItems", columns, menu_id=menu_id, recipe_id=recipe_id, availability=availability)
+		return self._select(
+			"MenuItems",
+			columns,
+			menu_id=menu_id,
+			recipe_id=recipe_id,
+			availability=availability
+		)
 
 	def get_customers(self, customer_id=None, columns=None):
-		return self._select("Customers", columns, customer_id=customer_id)
+		return self._select(
+			"Customers",
+			columns,
+			customer_id=customer_id
+		)
 
 	def get_orders(self, order_id=None, customer_id=None, columns=None):
-		return self._select("Orders", columns, order_id=order_id, customer_id=customer_id)
+		return self._select(
+			"Orders",
+			columns,
+			order_id=order_id,
+			customer_id=customer_id
+		)
 
 	def get_order_details(self, order_detail_id=None, order_id=None, menu_id=None, columns=None):
-		return self._select("OrderDetails", columns, order_details_id=order_detail_id, order_id=order_id, menu_id=menu_id)
+		return self._select(
+			"OrderDetails",
+			columns,
+			order_details_id=order_detail_id,
+			order_id=order_id,
+			menu_id=menu_id
+		)
 
 	# create, update, and delete operations
 	def save_recipe_ingredient(self, recipe_id, ingredient_id, quantity, recipe_ingredient_id=None):
@@ -142,7 +182,12 @@ class FlamebackCaterData:
 			"quantity_needed": quantity
 		}
 
-		return self._save("RecipeIngredients", "recipe_ingredients_id", values, record_id=recipe_ingredient_id)
+		return self._save(
+			"RecipeIngredients",
+			"recipe_ingredients_id",
+			values,
+			record_id=recipe_ingredient_id
+		)
 
 	def save_order_details(self, order_id, menu_id, quantity, total_cost, order_detail_id=None):
 		"""Insert or update one order line"""
@@ -153,7 +198,12 @@ class FlamebackCaterData:
 			"total_cost": total_cost
 		}
 
-		return self._save("OrderDetails", "order_details_id", values, record_id=order_detail_id)
+		return self._save(
+			"OrderDetails",
+			"order_details_id",
+			values,
+			record_id=order_detail_id
+		)
 
 	def delete_recipe_ingredients(self, recipe_ingredient_id):
 		"""Delete one recipe-ingredient relationship"""

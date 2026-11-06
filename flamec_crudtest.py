@@ -1,10 +1,13 @@
+from sys import argv
 from decimal import Decimal
 from getpass import getpass
 from itertools import combinations
 
 from flamec_crud import FlamebackCaterData
 
-def check(label, actual, expected):
+VERBOSE = "-v" in argv
+
+def check(label, actual, expected, show_result=False):
 	"""Compare results and stop immediately if a check fails"""
 	if isinstance(actual, list) and isinstance(expected, list):
 		passed = sorted(actual) == sorted(expected)
@@ -18,7 +21,10 @@ def check(label, actual, expected):
 			f"Actual: {actual}"
 		)
 
-	print(f"PASS: {label}: {actual}")
+	if VERBOSE or show_result:
+		print(f"PASS: {label}: {actual}")
+	else:
+		print(f"PASS: {label}")
 
 def test_reads(name, read, expected_count, primary_key, filters):
 	"""Check default reads, projections, and filter combinations."""
@@ -56,15 +62,15 @@ def test_changes(name, save, read, delete, id_arguement, initial, updated):
 
 	try:
 		check(f"{name} INSERT row count", result["affected_rows"], 1)
-		check(f"{name} after INSERT", read(**lookup), [(record_id,) + tuple(initial.values())])
+		check(f"{name} after INSERT", read(**lookup), [(record_id,) + tuple(initial.values())], show_result=True)
 		result = save(**updated, **lookup)
 		check(f"{name} UPDATE result", result, {"id": record_id, "affected_rows": 1})
-		check(f"{name} after UPDATE", read(**lookup), [(record_id,) + tuple(updated.values())])
+		check(f"{name} after UPDATE", read(**lookup), [(record_id,) + tuple(updated.values())], show_result=True)
 	finally:
 		deleted_rows = delete(record_id)
 
 	check(f"{name} DELETED row count", deleted_rows, 1)
-	check(f"{name} after DELETE", read(**lookup), [])
+	check(f"{name} after DELETE", read(**lookup), [], show_result=True)
 	check(f"{name} original data preserved", read(), original_rows)
 
 def main():
