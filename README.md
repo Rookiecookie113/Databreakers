@@ -69,38 +69,76 @@ Follow these steps to set up the database and run the tests.
    python flamec_crudtest.py -v
    ```
 
-**Important:** The test script makes changes to the database by inserting, updating, and deleting records. If you want to get the same results each time you run it, reload the DDL file from step 2 before running the tests again.
+   The script will ask for your MySQL username (press Enter to use `root`) and your MySQL password. The password is hidden as you type. Adding `-v` runs it in verbose mode, which prints the actual result next to every PASS line.
+
+**Note:** The test script inserts, updates, and deletes a temporary row in each intersection table, then deletes it and checks that the original data is unchanged. You do not need to reload the DDL between runs. The READ tests expect the exact sample data from `flamec_ddl.sql`, so if you have changed the data yourself, reload the DDL from step 2 before running the tests.
 
 ## Expected Output
 
-The example below comes from an earlier version of the test script and shows similar sample data. The current version includes PASS messages and displays the tables in a different order. The tables shown below are: Suppliers, InventoryItems, RecipeIngredients, Recipes, MenuItems, OrderDetails, Orders, and Customers.
+The examples below are short excerpts from a test run. The full output from a run right after loading the DDL is saved in `CLI_OUT.txt`, and the verbose output is saved in `CLI_OUT_VERBOSE.txt`.
+
+The first line starts with the username prompt, `MySQL user [root]:`. The password prompt does not appear in the saved output.
+
+If a check fails, the script stops right away and shows a `FAIL` message with the expected and actual values.
+
+### READ tests
+
+The script tests the READ methods for all eight tables in this order: Suppliers, InventoryItems, Recipes, RecipeIngredients, MenuItems, Customers, Orders, and OrderDetails. For each table, it checks the default row count and prints the table's rows, then tests selecting specific columns, each supported filter and combination of filters, and a primary key that does not exist. Here is the Suppliers section:
 
 ```text
+MySQL user [root]: PASS: Suppliers default row count
 [(1, 'Valley Poultry', '541-737-1000'), (2, 'Benton Produce', '541-737-8787'), (3, 'Cascade Foods', '541-737-4331')]
-[(1, 1, 'Chicken Fillet', 12, Decimal('5.50')), (2, 2, 'Potatoes', 25, Decimal('1.25')), (3, 2, 'Onions', 45, Decimal('0.75'))]
-[(1, 1, 1, 2), (2, 2, 2, 1), (3, 3, 3, 4), (4, 1, 2, 1), (5, 1, 3, 1), (6, 3, 1, 2)]
-[(1, 'Ultimate Stuffed Baked Potato'), (2, 'French Fry'), (3, 'Chicken Curry')]
-[(1, 1, Decimal('4.50'), 1), (2, 2, Decimal('2.75'), 1), (3, 3, Decimal('6.99'), 1)]
-[(1, 1, 1, 2, Decimal('9.00')), (2, 2, 2, 1, Decimal('2.75')), (3, 3, 3, 3, Decimal('20.97')), (4, 1, 2, 2, Decimal('5.50')), (5, 3, 1, 1, Decimal('4.50'))]
-[(1, 1, datetime.datetime(2025, 10, 23, 0, 0)), (2, 2, datetime.datetime(2025, 11, 2, 0, 0)), (3, 1, datetime.datetime(2025, 12, 5, 0, 0))]
-[(1, 'Alfonso Guachelle'), (2, 'Hardy McSnikerson'), (3, 'Joann Takarini')]
+PASS: Suppliers columns='supplier_id'
+PASS: Suppliers columns=('supplier_id',)
+PASS: Suppliers columns=['supplier_id']
+PASS: Suppliers filters={'supplier_id': 1}
+PASS: Suppliers selected columns with filters={'supplier_id': 1}
+PASS: Suppliers missing primary key
 ```
 
-The next 6 lines show the results of the insert, update, and delete tests. Each line displays the number of rows affected by the operation.
+Tables with more than one filter show every combination. For example, Orders:
 
 ```text
-None    <- add_recipe_ingredient(2, 5, 5)
-1       <- update_recipe_ingredient(4, 10)
-1       <- delete_recipe_ingredient(4)
-1       <- add_order_detail(1, 2, 3, 4)
-1       <- update_order_detail(1, 2)
-1       <- delete_order_detail(1)
+PASS: Orders filters={'order_id': 1}
+PASS: Orders selected columns with filters={'order_id': 1}
+PASS: Orders filters={'customer_id': 1}
+PASS: Orders selected columns with filters={'customer_id': 1}
+PASS: Orders filters={'order_id': 1, 'customer_id': 1}
+PASS: Orders selected columns with filters={'order_id': 1, 'customer_id': 1}
+PASS: Orders missing primary key
 ```
 
-The first test returns `None` because ingredient 5 does not exist in the InventoryItems table. Since the database uses a foreign key constraint, it prevents the insert from going through.
+After the eight tables, two more READ checks run: one makes sure filtering by `availability=False` works (it returns no rows, since every menu item is available), and one selects Suppliers by column names other than the ID.
 
-The other tests return `1`, which means that one row was successfully affected by the operation.
+```text
+PASS: MenuItems availability=False
+PASS: Suppliers named columns
+```
 
+### CREATE, UPDATE, and DELETE tests
+
+After the READ tests, the script tests inserting, updating, and deleting a temporary row in each intersection table (RecipeIngredients and OrderDetails). After each change, it reads the row back to confirm the change worked. At the end, it checks that the original sample data is still unchanged.
+
+```text
+PASS: RecipeIngredients INSERT row count
+PASS: RecipeIngredients after INSERT: [(7, 2, 1, 5)]
+PASS: RecipeIngredients UPDATE result
+PASS: RecipeIngredients after UPDATE: [(7, 2, 1, 10)]
+PASS: RecipeIngredients DELETED row count
+PASS: RecipeIngredients after DELETE: []
+PASS: RecipeIngredients original data preserved
+PASS: OrderDetails INSERT row count
+PASS: OrderDetails after INSERT: [(6, 3, 2, 3, Decimal('8.25'))]
+PASS: OrderDetails UPDATE result
+PASS: OrderDetails after UPDATE: [(6, 3, 2, 2, Decimal('5.50'))]
+PASS: OrderDetails DELETED row count
+PASS: OrderDetails after DELETE: []
+PASS: OrderDetails original data preserved
+
+ALL TESTS PASSED
+```
+
+The temporary rows get their IDs from AUTO_INCREMENT. Right after loading the DDL, they are 7 and 6 as shown above. Each later run without reloading the DDL adds 1 to both IDs (8 and 7, then 9 and 8, and so on). Everything else stays the same.
 ## Citation
 
 This README was drafted with help from Claude (Anthropic, claude.ai) on November 4, 2026. Claude produced an initial draft based on our project files and test output, which we then reviewed and rewrote.
