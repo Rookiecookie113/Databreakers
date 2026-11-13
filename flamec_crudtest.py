@@ -190,7 +190,7 @@ def test_supplier_changes(db):
 			{"recipe_name": "Test Recipe"}
 		)
 		recipe_id = result["id"]
-		result = db.save_recipe_ingredient(recipe_id, ingredient_id, 2)
+		result = db.save_recipe_ingredients(recipe_id, ingredient_id, 2)
 		link_id = result["id"]
 		recipe_rows = db.get_recipes()
 		link_rows = db.get_recipe_ingredients()
@@ -321,11 +321,11 @@ def main():
 			("Suppliers", db.get_suppliers, 3, "supplier_id", [("supplier_id", 0), ("is_active", 3)]),
 			("InventoryItems", db.get_inventory_items, 3, "ingredient_id", [("ingredient_id", 0), ("supplier_id", 1)]),
 			("Recipes", db.get_recipes, 3, "recipe_id", [("recipe_id", 0)]),
-			("RecipeIngredients", db.get_recipe_ingredients, 6, "recipe_ingredients_id", [("recipe_ingredient_id", 0), ("recipe_id", 1), ("ingredient_id", 2)]),
+			("RecipeIngredients", db.get_recipe_ingredients, 6, "recipe_ingredients_id", [("recipe_ingredients_id", 0), ("recipe_id", 1), ("ingredient_id", 2)]),
 			("MenuItems", db.get_menu_items, 3, "menu_id", [("menu_id", 0), ("recipe_id", 1), ("availability", 3)]),
 			("Customers", db.get_customers, 3, "customer_id", [("customer_id", 0)]),
 			("Orders", db.get_orders, 3, "order_id", [("order_id", 0), ("customer_id", 1)]),
-			("OrderDetails", db.get_order_details, 5, "order_details_id", [("order_detail_id", 0), ("order_id", 1), ("menu_id", 2)])
+			("OrderDetails", db.get_order_details, 5, "order_details_id", [("order_details_id", 0), ("order_id", 1), ("menu_id", 2)])
 		]
 
 		for case in read_cases:
@@ -346,10 +346,10 @@ def main():
 
 		test_changes(
 			"RecipeIngredients",
-			db.save_recipe_ingredient,
+			db.save_recipe_ingredients,
 			db.get_recipe_ingredients,
 			db.delete_recipe_ingredients,
-			"recipe_ingredient_id",
+			"recipe_ingredients_id",
 			{
 				"recipe_id": 2,
 				"ingredient_id": 1,
@@ -365,8 +365,8 @@ def main():
 			"OrderDetails",
 			db.save_order_details,
 			db.get_order_details,
-			db.delete_order_detail,
-			"order_detail_id", 
+			db.delete_order_details,
+			"order_details_id", 
 			{
 				"order_id": 3,
 				"menu_id": 2,

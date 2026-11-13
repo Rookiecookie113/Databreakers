@@ -132,11 +132,11 @@ class FlamebackCaterData:
 			recipe_id=recipe_id
 		)
 
-	def get_recipe_ingredients(self, recipe_ingredient_id=None, recipe_id=None, ingredient_id=None, columns=None):
+	def get_recipe_ingredients(self, recipe_ingredients_id=None, recipe_id=None, ingredient_id=None, columns=None):
 		return self._select(
 			"RecipeIngredients",
 			columns,
-			recipe_ingredients_id=recipe_ingredient_id,
+			recipe_ingredients_id=recipe_ingredients_id,
 			recipe_id=recipe_id,
 			ingredient_id=ingredient_id
 		)
@@ -165,11 +165,11 @@ class FlamebackCaterData:
 			customer_id=customer_id
 		)
 
-	def get_order_details(self, order_detail_id=None, order_id=None, menu_id=None, columns=None):
+	def get_order_details(self, order_details_id=None, order_id=None, menu_id=None, columns=None):
 		return self._select(
 			"OrderDetails",
 			columns,
-			order_details_id=order_detail_id,
+			order_details_id=order_details_id,
 			order_id=order_id,
 			menu_id=menu_id
 		)
@@ -204,7 +204,7 @@ class FlamebackCaterData:
 		affected_rows, _ = self._execute_write(sql, (supplier_id,))
 		return affected_rows
 
-	def save_recipe_ingredient(self, recipe_id, ingredient_id, quantity, recipe_ingredient_id=None):
+	def save_recipe_ingredients(self, recipe_id, ingredient_id, quantity, recipe_ingredients_id=None):
 		"""Insert or update one recipe-ingredient relationship"""
 		values = {
 			"recipe_id": recipe_id,
@@ -216,10 +216,10 @@ class FlamebackCaterData:
 			"RecipeIngredients",
 			"recipe_ingredients_id",
 			values,
-			record_id=recipe_ingredient_id
+			record_id=recipe_ingredients_id
 		)
 
-	def save_order_details(self, order_id, menu_id, quantity, total_cost, order_detail_id=None):
+	def save_order_details(self, order_id, menu_id, quantity, total_cost, order_details_id=None):
 		"""Insert or update one order line"""
 		values = {
 			"order_id": order_id,
@@ -232,21 +232,21 @@ class FlamebackCaterData:
 			"OrderDetails",
 			"order_details_id",
 			values,
-			record_id=order_detail_id
+			record_id=order_details_id
 		)
 
-	def delete_recipe_ingredients(self, recipe_ingredient_id):
+	def delete_recipe_ingredients(self, recipe_ingredients_id):
 		"""Delete one recipe-ingredient relationship"""
 		return self._delete(
 			"RecipeIngredients",
 			"recipe_ingredients_id",
-			recipe_ingredient_id
+			recipe_ingredients_id
 		)
 
-	def delete_order_detail(self, order_detail_id):
+	def delete_order_details(self, order_details_id):
 		"""Delete one order line"""
 		return self._delete(
 			"OrderDetails",
 			"order_details_id",
-			order_detail_id
+			order_details_id
 		)
