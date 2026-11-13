@@ -68,7 +68,7 @@ Follow these steps to set up the database and run the tests.
 
 ## Expected Output
 
-The script displays the contents of all eight tabls under `DATABASE BEFORE TESTS`, followed by PASS or FAIL messages for each check. These checks cover reads, selected columns, filters, insert/update/delete ops, and supplier archiving, restoration, and deletion.
+The script displays the contents of all eight tables under `DATABASE BEFORE TESTS`, followed by PASS or FAIL messages for each check. These checks cover reads, selected columns, filters, insert/update/delete ops, and supplier archiving, restoration, and deletion.
 
 After testing, the script displays the tables again under `DATABASE AFTER TESTS` and compares their contents with the starting data.
 
@@ -90,19 +90,19 @@ TEST RESULTS
 ALL TESTS PASSED
 ```
 
-The complete saved output is availabl in `CLI_OUT.txt`.
+The complete saved output is available in `CLI_OUT.txt`.
 
-If a check fails, the script will display its expected and actual results. The final summary lists the failed checks and shows how many checks passed or failed. Unexpectd errors are reported separately and mark the run as incomplete. For an incomplete run, the countts include only checks that were executed.
+If a check fails, the script will display its expected and actual results. The final summary lists the failed checks and shows how many checks passed or failed. Unexpected errors are reported separately and mark the run as incomplete. For an incomplete run, the counts include only checks that were executed.
 
 ## Supplier Status and Delete Rules
 
-Suppliers use an `is_active` field so thy can be archived without deleting their inventory items. Archived suppliers rmain visible in general supplier reads and can be restored later.
+Suppliers use an `is_active` field so they can be archived without deleting their inventory items. Archived suppliers remain visible in general supplier reads and can be restored later.
 
 The data layer uses `set_supplier_active(supplier_id, False)` to archive a supplier and `set_supplier_active(supplier_id, True)` to restore one. Active suppliers can be selected with `get_suppliers(is_active=True)`.
 
-Permanent supplier deletion requires the supplier to be archived. The database also blocks deletion while inventory items referenced that supplier.
+Permanent supplier deletion requires the supplier to be archived. The database also blocks deletion while inventory items reference that supplier.
 
-Other foreign keys prevent deleting ingredients used by recipes, recipes used by menu items, customers with orders, and menu items refrenced by order details. Deleting an otherwise unreferenced recipe removes its recipe-ingredient links. Deleting an order removes its order details.
+Other foreign keys prevent deleting ingredients used by recipes, recipes used by menu items, customers with orders, and menu items referenced by order details. Deleting an otherwise unreferenced recipe removes its recipe-ingredient links. Deleting an order removes its order details.
 
 ## Citation
 
