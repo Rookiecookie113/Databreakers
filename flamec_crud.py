@@ -98,7 +98,7 @@ class FlamebackCaterData:
 	def _delete(self, table, primary_key, record_id):
 		"""Delete one record using an application defined primary key"""
 		if record_id is None:
-			raise ValueError("A record ID is rquired for deletion")
+			raise ValueError("A record ID is required for deletion")
 		sql = (
 			f"DELETE FROM {table} "
 			f"WHERE {primary_key} = %s;"
@@ -108,12 +108,13 @@ class FlamebackCaterData:
 
 		return affected_rows
 
-	# Read ops for all tables
-	def get_suppliers(self, supplier_id=None, columns=None):
+# Read ops for all tables
+	def get_suppliers(self, supplier_id=None, columns=None, is_active=None):
 		return self._select(
 			"Suppliers",
 			columns,
-			supplier_id=supplier_id
+			supplier_id=supplier_id,
+			is_active=is_active
 		)
 
 	def get_inventory_items(self, ingredient_id=None, supplier_id=None, columns=None):
@@ -173,7 +174,36 @@ class FlamebackCaterData:
 			menu_id=menu_id
 		)
 
-	# create, update, and delete operations
+# create, update, and delete operations
+	def set_supplier_active(self, supplier_id, is_active):
+		"""Archive or restore a supplier in the Suppliers table"""
+		if supplier_id is None:
+			raise ValueError("A supplier id is required")
+		if not isinstance(is_active, bool):
+			raise ValueError("Active status must be True or False")
+
+		result = self._save(
+			"Suppliers",
+			"supplier_id",
+			{"is_active": is_active},
+			record_id=supplier_id
+		)
+
+		return result["affected_rows"]
+
+	def delete_supplier(self, supplier_id):
+		"""Delete an archived supplier if no inventory items reference it"""
+		if supplier_id is None:
+			raise ValueError("A supplier id is required for deletion")
+		
+		sql = (
+			"DELETE FROM Suppliers "
+			"WHERE supplier_id = %s AND is_active = FALSE;"
+		)
+
+		affected_rows, _ = self._execute_write(sql, (supplier_id,))
+		return affected_rows
+
 	def save_recipe_ingredient(self, recipe_id, ingredient_id, quantity, recipe_ingredient_id=None):
 		"""Insert or update one recipe-ingredient relationship"""
 		values = {

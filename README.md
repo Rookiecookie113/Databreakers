@@ -1,6 +1,6 @@
 # Flameback Catering System (Project Group 12)
 
-**Authors:** Hurrsh Misttry, Tetsuya Bassler, Allen Dickey  
+**Authors:** Hurrsh Misttry, Tetsuya Bassler, Allen Dickey
 CS 340, Project Step 3 (Draft)
 
 ## Description
@@ -13,14 +13,13 @@ The database keeps track of suppliers, inventory items, recipes, recipe ingredie
 
 ## Project Files
 
-| File | Description |
-|------|-------------|
-| `flamec_ddl.sql` | Creates the database tables and adds the sample data. |
-| `flamec_crud.py` | Contains the `FlamebackCaterData` class and handles all SQL queries. |
-| `flamec_crudtest.py` | Runs tests for each data layer method and displays the results. |
-| `flamec_dml.sql` | Contains a reference list of the SQL queries used in the data layer. It uses `:variable` placeholders, so it is not meant to be run directly. |
-| `CLI_OUT.txt` | Contains the saved output from a test run. |
-| `CLI_OUT_VERBOSE.txt` | Contains the saved verbose output from a test run. |
+| File                   | Description                                                                                                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flamec_ddl.sql`     | Creates the database tables and adds the sample data.                                                                                                                  |
+| `flamec_crud.py`     | Contains the `FlamebackCaterData` class and handles database reads, relationship changes, and supplier archiving and deletion.                                       |
+| `flamec_crudtest.py` | Tests the data layer, displays the database before and after testing, and reports passed and failed checks.                                                            |
+| `flamec_dml.sql`     | Contains reference queries, including supplier status and inventory reassignment queries. It uses `:variable` placeholders and it is not meant to be run directly. |
+| `CLI_OUT.txt`        | Contains the saved output from a test run.                                                                                                                             |
 
 ## Installation and Dependencies
 
@@ -48,7 +47,6 @@ Follow these steps to set up the database and run the tests.
    CREATE DATABASE IF NOT EXISTS flamebackcater_test;
    USE flamebackcater_test;
    ```
-
 2. **Create the tables and load the sample data.**
 
    From the MySQL prompt, run the following command from the project folder:
@@ -56,7 +54,6 @@ Follow these steps to set up the database and run the tests.
    ```sql
    SOURCE flamec_ddl.sql;
    ```
-
 3. **Run the test script.**
 
    Open a terminal in the project folder and run:
@@ -64,81 +61,49 @@ Follow these steps to set up the database and run the tests.
    ```bash
    python flamec_crudtest.py
    ```
-   or
-   ```bash
-   python flamec_crudtest.py -v
-   ```
 
-   The script will ask for your MySQL username (press Enter to use `root`) and your MySQL password. The password is hidden as you type. Adding `-v` runs it in verbose mode, which prints the actual result next to every PASS line.
+   Enter your MySQL username and password when prompted. Pressing Enter without a username defaults to `root`.
 
-**Note:** The test script inserts, updates, and deletes a temporary row in each intersection table, then deletes it and checks that the original data is unchanged. You do not need to reload the DDL between runs. The READ tests expect the exact sample data from `flamec_ddl.sql`, so if you have changed the data yourself, reload the DDL from step 2 before running the tests.
+**Important:** The test script makes changes to the database by inserting, updating, and deleting records. If you want to get the same results each time you run it, reload the DDL file from step 2 before running the tests again.
 
 ## Expected Output
 
-The examples below are short excerpts from a test run. The full output from a run right after loading the DDL is saved in `CLI_OUT.txt`, and the verbose output is saved in `CLI_OUT_VERBOSE.txt`.
+The script displays the contents of all eight tables under `DATABASE BEFORE TESTS`, followed by PASS or FAIL messages for each check. These checks cover reads, selected columns, filters, insert/update/delete ops, and supplier archiving, restoration, and deletion.
 
-The first line starts with the username prompt, `MySQL user [root]:`. The password prompt does not appear in the saved output.
+After testing, the script displays the tables again under `DATABASE AFTER TESTS` and compares their contents with the starting data.
 
-If a check fails, the script stops right away and shows a `FAIL` message with the expected and actual values.
-
-### READ tests
-
-The script tests the READ methods for all eight tables in this order: Suppliers, InventoryItems, Recipes, RecipeIngredients, MenuItems, Customers, Orders, and OrderDetails. For each table, it checks the default row count and prints the table's rows, then tests selecting specific columns, each supported filter and combination of filters, and a primary key that does not exist. Here is the Suppliers section:
-
+A successful run ends with:
 ```text
-MySQL user [root]: PASS: Suppliers default row count
-[(1, 'Valley Poultry', '541-737-1000'), (2, 'Benton Produce', '541-737-8787'), (3, 'Cascade Foods', '541-737-4331')]
-PASS: Suppliers columns='supplier_id'
-PASS: Suppliers columns=('supplier_id',)
-PASS: Suppliers columns=['supplier_id']
-PASS: Suppliers filters={'supplier_id': 1}
-PASS: Suppliers selected columns with filters={'supplier_id': 1}
-PASS: Suppliers missing primary key
-```
+PASS: Suppliers restored after all tests
+PASS: InventoryItems restored after all tests
+PASS: Recipes restored after all tests
+PASS: RecipeIngredients restored after all tests
+PASS: MenuItems restored after all tests
+PASS: Customers restored after all tests
+PASS: Orders restored after all tests
+PASS: OrderDetails restored after all tests
 
-Tables with more than one filter show every combination. For example, Orders:
-
-```text
-PASS: Orders filters={'order_id': 1}
-PASS: Orders selected columns with filters={'order_id': 1}
-PASS: Orders filters={'customer_id': 1}
-PASS: Orders selected columns with filters={'customer_id': 1}
-PASS: Orders filters={'order_id': 1, 'customer_id': 1}
-PASS: Orders selected columns with filters={'order_id': 1, 'customer_id': 1}
-PASS: Orders missing primary key
-```
-
-After the eight tables, two more READ checks run: one makes sure filtering by `availability=False` works (it returns no rows, since every menu item is available), and one selects Suppliers by column names other than the ID.
-
-```text
-PASS: MenuItems availability=False
-PASS: Suppliers named columns
-```
-
-### CREATE, UPDATE, and DELETE tests
-
-After the READ tests, the script tests inserting, updating, and deleting a temporary row in each intersection table (RecipeIngredients and OrderDetails). After each change, it reads the row back to confirm the change worked. At the end, it checks that the original sample data is still unchanged.
-
-```text
-PASS: RecipeIngredients INSERT row count
-PASS: RecipeIngredients after INSERT: [(7, 2, 1, 5)]
-PASS: RecipeIngredients UPDATE result
-PASS: RecipeIngredients after UPDATE: [(7, 2, 1, 10)]
-PASS: RecipeIngredients DELETED row count
-PASS: RecipeIngredients after DELETE: []
-PASS: RecipeIngredients original data preserved
-PASS: OrderDetails INSERT row count
-PASS: OrderDetails after INSERT: [(6, 3, 2, 3, Decimal('8.25'))]
-PASS: OrderDetails UPDATE result
-PASS: OrderDetails after UPDATE: [(6, 3, 2, 2, Decimal('5.50'))]
-PASS: OrderDetails DELETED row count
-PASS: OrderDetails after DELETE: []
-PASS: OrderDetails original data preserved
+TEST RESULTS
+148/148 checks passed
+0/148 checks failed
 
 ALL TESTS PASSED
 ```
 
-The temporary rows get their IDs from AUTO_INCREMENT. Right after loading the DDL, they are 7 and 6 as shown above. Each later run without reloading the DDL adds 1 to both IDs (8 and 7, then 9 and 8, and so on). Everything else stays the same.
+The complete saved output is available in `CLI_OUT.txt`.
+
+If a check fails, the script will display its expected and actual results. The final summary lists the failed checks and shows how many checks passed or failed. Unexpected errors are reported separately and mark the run as incomplete. For an incomplete run, the counts include only checks that were executed.
+
+## Supplier Status and Delete Rules
+
+Suppliers use an `is_active` field so they can be archived without deleting their inventory items. Archived suppliers remain visible in general supplier reads and can be restored later.
+
+The data layer uses `set_supplier_active(supplier_id, False)` to archive a supplier and `set_supplier_active(supplier_id, True)` to restore one. Active suppliers can be selected with `get_suppliers(is_active=True)`.
+
+Permanent supplier deletion requires the supplier to be archived. The database also blocks deletion while inventory items reference that supplier.
+
+Other foreign keys prevent deleting ingredients used by recipes, recipes used by menu items, customers with orders, and menu items referenced by order details. Deleting an otherwise unreferenced recipe removes its recipe-ingredient links. Deleting an order removes its order details.
+
 ## Citation
 
 This README was drafted with help from Claude (Anthropic, claude.ai) on November 4, 2026. Claude produced an initial draft based on our project files and test output, which we then reviewed and rewrote.
