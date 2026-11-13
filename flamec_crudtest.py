@@ -61,15 +61,15 @@ def test_reads(name, read, expected_count, primary_key, filters):
 			check(f"{name} filters={arguments}", read(**arguments), expected)
 			check(f"{name} selected columns with filters={arguments}", read(columns=(primary_key,), **arguments), [(row[0],) for row in expected])
 
-	primary_arguement = filters[0][0]
-	check(f"{name} missing primary key", read(**{primary_arguement: -1}), [])
+	primary_argument = filters[0][0]
+	check(f"{name} missing primary key", read(**{primary_argument: -1}), [])
 
-def test_changes(name, save, read, delete, id_arguement, initial, updated):
+def test_changes(name, save, read, delete, id_argument, initial, updated):
 	"""Verify a temp record through its lifecycle"""
 	original_rows = read()
 	result = save(**initial)
 	record_id = result["id"]
-	lookup = {id_arguement: record_id}
+	lookup = {id_argument: record_id}
 
 	try:
 		check(f"{name} INSERT row count", result["affected_rows"], 1)
