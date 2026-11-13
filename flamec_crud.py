@@ -98,7 +98,7 @@ class FlamebackCaterData:
 	def _delete(self, table, primary_key, record_id):
 		"""Delete one record using an application defined primary key"""
 		if record_id is None:
-			raise ValueError("A record ID is rquired for deletion")
+			raise ValueError("A record ID is required for deletion")
 		sql = (
 			f"DELETE FROM {table} "
 			f"WHERE {primary_key} = %s;"
