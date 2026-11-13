@@ -15,6 +15,7 @@ CREATE TABLE Suppliers (
 	supplier_id INT(11) NOT NULL AUTO_INCREMENT,
 	supplier_name VARCHAR(50) NOT NULL,
 	supplier_phone VARCHAR(20) NOT NULL,
+	is_active BOOLEAN NOT NULL DEFAULT TRUE,
 	PRIMARY KEY (supplier_id)
 );
 
@@ -33,7 +34,7 @@ CREATE TABLE InventoryItems (
 	CONSTRAINT fk_inventory_supplier
 		FOREIGN KEY (supplier_id)
 		REFERENCES Suppliers (supplier_id)
-		ON DELETE CASCADE
+		ON DELETE RESTRICT
 		ON UPDATE CASCADE,
 
 	CONSTRAINT chk_inventory_quantity
@@ -87,7 +88,7 @@ CREATE TABLE MenuItems (
 	menu_id INT(11) NOT NULL AUTO_INCREMENT,
 	recipe_id INT(11) NOT NULL,
 	price DECIMAL(10,2) NOT NULL,
-	availability BOOLEAN DEFAULT TRUE,
+	availability BOOLEAN NOT NULL DEFAULT TRUE,
 	PRIMARY KEY (menu_id),
 
 	CONSTRAINT fk_menu_recipe
@@ -166,11 +167,11 @@ START TRANSACTION;
 -- Suppliers
 -- Supplier 2 supplies multiple ingredients.
 -- Supplier 3 has no inventory items assigned yet.
-INSERT INTO Suppliers (supplier_id, supplier_name, supplier_phone)
+INSERT INTO Suppliers (supplier_id, supplier_name, supplier_phone, is_active)
 VALUES
-	(1, 'Valley Poultry', '541-737-1000'),
-	(2, 'Benton Produce', '541-737-8787'),
-	(3, 'Cascade Foods', '541-737-4331');
+	(1, 'Valley Poultry', '541-737-1000', TRUE),
+	(2, 'Benton Produce', '541-737-8787', TRUE),
+	(3, 'Cascade Foods', '541-737-4331', FALSE);
 
 -- InventoryItems
 INSERT INTO InventoryItems (ingredient_id, supplier_id, ingredient_name, quantity_on_hand, price_per_unit)
