@@ -4,28 +4,28 @@
 -- READ ALL TABLES
 -- =========================================================
 
---Query retrieves all data from the Suppliers table
+-- Query retrieves all data from the Suppliers table
 SELECT * FROM Suppliers;
 
---Query that retrieves all data from the InventoryItems table
+-- Query that retrieves all data from the InventoryItems table
 SELECT * FROM InventoryItems;
 
---Gets all data from the RecipeIngredients intersection table
+-- Gets all data from the RecipeIngredients intersection table
 SELECT * FROM RecipeIngredients;
 
---Gets all data from the Recipes table
+-- Gets all data from the Recipes table
 SELECT * FROM Recipes;
 
---Gets all data from the MenuItems table
+-- Gets all data from the MenuItems table
 SELECT * FROM MenuItems;
 
---Gets all data from the OrderDetails intersection table
+-- Gets all data from the OrderDetails intersection table
 SELECT * FROM OrderDetails;
 
---Gets all data from the Orders table
+-- Gets all data from the Orders table
 SELECT * FROM Orders;
 
---Gets all data from the Customers table
+-- Gets all data from the Customers table
 SELECT * FROM Customers;
 
 -- =========================================================
