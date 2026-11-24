@@ -173,7 +173,7 @@ def test_supplier_changes(db):
 			[(supplier_id,)]
 		)
 
-		# Connect th temp ingredient to a temp recipe
+		# Connect the temp ingredient to a temp recipe
 		result = db._save("sp_insert_recipe", ("Test Recipe",))
 		recipe_id = result["id"]
 		result = db.save_recipe_ingredients(recipe_id, ingredient_id, 2)
