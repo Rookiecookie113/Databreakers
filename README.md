@@ -123,6 +123,8 @@ Optional tasks:
 
 ## Citation
 
-This README was drafted with help from Claude (Anthropic, claude.ai) on November 4, 2026. Claude produced an initial draft based on our project files and test output, which we then reviewed and rewrote.
+GeeksforGeeks. (2021, April 10). Composite Key in SQL. https://www.geeksforgeeks.org/sql/composite-key-in-sql/ Accessed 7 Oct 2026.
+
+Anthropic. (2026). Claude (Opus 5.5) [Large language model]. https://claude.ai/ Accessed 23 Nov 2026. How we used Claude: We used Claude to help us understand the assignment requirements, to produce an initial README draft that we reviewed and rewrote (Nov 4, 2026), and to review our project files against TA feedback and point out errors and inconsistencies (Nov 23, 2026).
 
 **Prompt:** "I need help with a readme for our repo," along with our project files and draft README.
