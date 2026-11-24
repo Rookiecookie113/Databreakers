@@ -50,7 +50,7 @@ Follow these steps to set up the database and run the tests.
    ```
 2. **Create the tables and load the sample data.**
 
-   From the MySQL prompt, run the following command from the project folder:
+   Start the MySQL client from the project folder, then run the following commands:
 
    ```sql
    SOURCE flamec_ddl.sql;
@@ -102,9 +102,11 @@ Suppliers use an `is_active` field so they can be archived without deleting thei
 
 The data layer uses `set_supplier_active(supplier_id, False)` to archive a supplier and `set_supplier_active(supplier_id, True)` to restore one. Active suppliers can be selected with `get_suppliers(is_active=True)`.
 
-Permanent supplier deletion requires the supplier to be archived. The database also blocks deletion while inventory items reference that supplier.
+Permanent supplier deletion requires the supplier to be archived. The database also blocks deletion while inventory items reference that supplier, and `delete_supplier()` raises an `IntegrityError` in that case.
 
 Other foreign keys prevent deleting ingredients used by recipes, recipes used by menu items, customers with orders, and menu items referenced by order details. Deleting an otherwise unreferenced recipe removes its recipe-ingredient links. Deleting an order removes its order details.
+
+Each ingredient can only be listed once per recipe. A UNIQUE constraint on `(recipe_id, ingredient_id)` in RecipeIngredients blocks duplicate entries.
 
 ## Planned Step 5 Enhancement
 
@@ -123,8 +125,4 @@ Optional tasks:
 
 ## Citation
 
-GeeksforGeeks. (2021, April 10). Composite Key in SQL. https://www.geeksforgeeks.org/sql/composite-key-in-sql/ Accessed 7 Oct 2026.
-
-Anthropic. (2026). Claude (Opus 5.5) [Large language model]. https://claude.ai/ Accessed 23 Nov 2026. How we used Claude: We used Claude to help us understand the assignment requirements, to produce an initial README draft that we reviewed and rewrote (Nov 4, 2026), and to review our project files against TA feedback and point out errors and inconsistencies (Nov 23, 2026).
-
-**Prompt:** "I need help with a readme for our repo," along with our project files and draft README.
+Anthropic. (2026). Claude (Opus 5.5) [Large language model]. https://claude.ai/ Accessed 23 Nov 2026. How we used Claude: We used Claude to help us understand the assignment requirements, to produce an initial README draft that we reviewed and rewrote (Nov 4, 2026), and to review our project files against TA feedback and point out errors and inconsistencies (Nov 23, 2026). Our group designed the database, wrote the application and test code, made the corrections, and made all final decisions.
