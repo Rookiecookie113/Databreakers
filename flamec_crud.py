@@ -53,60 +53,34 @@ class FlamebackCaterData:
 			sql += " WHERE " + " AND ".join(conditions)
 		return self._fetch_all(sql + ";", tuple(parameters))
 
-	def _execute_write(self, sql, parameters):
-		"""Commit a write and return its row count and generated id"""
+	def _call_procedure(self, procedure, parameters=()):
+		"""Execute a stored procedure and return its parameters"""
 		try:
-			self._cursor.execute(sql, parameters)
-			affected_rows = self._cursor.rowcount
-			inserted_id = self._cursor.lastrowid
+			result = self._cursor.callproc(procedure, parameters)
 			self._connection.commit()
-			return affected_rows, inserted_id
+			return result
 		except m.Error:
 			self._connection.rollback()
 			raise
 
-	def _save(self, table, primary_key, values, record_id=None):
-		"""Insert or Update values supplied by an application method"""
-		if not values:
-			raise ValueError("At least one value is required")
-		columns = tuple(values)
-		parameters = tuple(values[column] for column in columns)
-		if record_id is None:
-			column_names = ", ".join(f"{column}" for column in columns)
-			placeholders = ", ".join("%s" for _ in columns)
-			sql = (
-				f"INSERT INTO {table} ({column_names}) "
-				f"VALUES ({placeholders});"
-			)
-		else:
-			assignments = ", ".join(f"{column} = %s" for column in columns)
-			sql = (
-				f"UPDATE {table} SET {assignments} "
-				f"WHERE {primary_key} = %s;"
-			)
-			parameters += (record_id,)
-
-		affected_rows, inserted_id = self._execute_write(sql, parameters)
-		if record_id is None:
-			record_id = inserted_id
-		
+	def _save(self, procedure, parameters, record_id=None):
+		"""Return the ID and row count from a save procedure"""
+		result = self._call_procedure(procedure, parameters + (record_id, 0))
 		return {
-			"id": record_id,
-			"affected_rows": affected_rows
+			"id": result[-2],
+			"affected_rows": result[-1]
 		}
 	
-	def _delete(self, table, primary_key, record_id):
+	def _delete(self, procedure, record_id):
 		"""Delete one record using an application defined primary key"""
 		if record_id is None:
 			raise ValueError("A record ID is required for deletion")
-		sql = (
-			f"DELETE FROM {table} "
-			f"WHERE {primary_key} = %s;"
-		)
+		result = self._call_procedure(procedure, (record_id, 0))
+		return result[-1]
 
-		affected_rows, _ = self._execute_write(sql, (record_id,))
-
-		return affected_rows
+	def reset_database(self):
+		"""Restore the database schema and sample data"""
+		self._call_procedure("sp_reset_database")
 
 # Read ops for all tables
 	def get_suppliers(self, supplier_id=None, columns=None, is_active=None):
@@ -182,71 +156,46 @@ class FlamebackCaterData:
 		if not isinstance(is_active, bool):
 			raise ValueError("Active status must be True or False")
 
-		result = self._save(
-			"Suppliers",
-			"supplier_id",
-			{"is_active": is_active},
-			record_id=supplier_id
+		result = self._call_procedure(
+			"sp_set_supplier_active",
+			(supplier_id, int(is_active), 0)
 		)
 
-		return result["affected_rows"]
+		return result[-1]
 
 	def delete_supplier(self, supplier_id):
 		"""Delete an archived supplier if no inventory items reference it"""
 		if supplier_id is None:
 			raise ValueError("A supplier id is required for deletion")
 		
-		sql = (
-			"DELETE FROM Suppliers "
-			"WHERE supplier_id = %s AND is_active = FALSE;"
-		)
-
-		affected_rows, _ = self._execute_write(sql, (supplier_id,))
-		return affected_rows
+		return self._delete("sp_delete_supplier", supplier_id)
 
 	def save_recipe_ingredients(self, recipe_id, ingredient_id, quantity, recipe_ingredients_id=None):
 		"""Insert or update one recipe-ingredient relationship"""
-		values = {
-			"recipe_id": recipe_id,
-			"ingredient_id": ingredient_id,
-			"quantity_needed": quantity
-		}
-
 		return self._save(
-			"RecipeIngredients",
-			"recipe_ingredients_id",
-			values,
+			"sp_save_recipe_ingredients",
+			(recipe_id, ingredient_id, quantity),
 			record_id=recipe_ingredients_id
 		)
 
 	def save_order_details(self, order_id, menu_id, quantity, total_cost, order_details_id=None):
 		"""Insert or update one order line"""
-		values = {
-			"order_id": order_id,
-			"menu_id": menu_id,
-			"quantity_ordered": quantity,
-			"total_cost": total_cost
-		}
-
 		return self._save(
-			"OrderDetails",
-			"order_details_id",
-			values,
+			"sp_save_order_details",
+			(order_id, menu_id, quantity, total_cost),
 			record_id=order_details_id
 		)
 
 	def delete_recipe_ingredients(self, recipe_ingredients_id):
 		"""Delete one recipe-ingredient relationship"""
 		return self._delete(
-			"RecipeIngredients",
-			"recipe_ingredients_id",
+			"sp_delete_recipe_ingredients",
 			recipe_ingredients_id
 		)
 
 	def delete_order_details(self, order_details_id):
 		"""Delete one order line"""
 		return self._delete(
-			"OrderDetails",
-			"order_details_id",
+			"sp_delete_order_details",
 			order_details_id
 		)

@@ -1,11 +1,11 @@
 # Flameback Catering System (Project Group 12)
 
 **Authors:** Hurrsh Misttry, Tetsuya Bassler, Allen Dickey
-CS 340, Project Step 3 (Draft)
+CS 340, Project Step 4 (Draft)
 
 ## Description
 
-The Flameback Catering System is a Python application that allows users to work with the company database without having to write or interact with SQL directly. All database queries are handled in one file (`flamec_crud.py`), while the rest of the application uses its methods to access and manage the data.
+The Flameback Catering System is a Python application that allows users to work with the company database without having to write or interact with SQL directly. All database access is handled through `flamec_crud.py`, which uses SELECT queries and stored procedures to access and manage the data.
 
 The purpose of this project is to replace the company's current process of keeping track of information using paper records and spreadsheets. By moving everything into a database with an application to manage it, the goal is to make organizing and accessing company information easier and more efficient.
 
@@ -15,10 +15,11 @@ The database keeps track of suppliers, inventory items, recipes, recipe ingredie
 
 | File                   | Description                                                                                                                                                            |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `flamec_ddl.sql`     | Creates the database tables and adds the sample data.                                                                                                                  |
+| `flamec_ddl.sql`     | Defines the RESET procedure, creates the database tables, and adds the sample data.                                                                                                                  |
+| `flamec_plsql.sql`  | Defines the stored procedures for create, update, and delete operations. |
 | `flamec_crud.py`     | Contains the `FlamebackCaterData` class and handles database reads, relationship changes, and supplier archiving and deletion.                                       |
 | `flamec_crudtest.py` | Tests the data layer, displays the database before and after testing, and reports passed and failed checks.                                                            |
-| `flamec_dml.sql`     | Contains reference queries, including supplier status and inventory reassignment queries. It uses `:variable` placeholders and it is not meant to be run directly. |
+| `flamec_dml.sql`     | Contains reference queries used by the application and stored procedures. It uses `:variable` placeholders and it is not meant to be run directly. |
 | `CLI_OUT.txt`        | Contains the saved output from a test run.                                                                                                                             |
 
 ## Installation and Dependencies
@@ -49,10 +50,11 @@ Follow these steps to set up the database and run the tests.
    ```
 2. **Create the tables and load the sample data.**
 
-   From the MySQL prompt, run the following command from the project folder:
+   Start the MySQL client from the project folder, then run the following commands:
 
    ```sql
    SOURCE flamec_ddl.sql;
+   SOURCE flamec_plsql.sql;
    ```
 3. **Run the test script.**
 
@@ -64,13 +66,13 @@ Follow these steps to set up the database and run the tests.
 
    Enter your MySQL username and password when prompted. Pressing Enter without a username defaults to `root`.
 
-**Important:** The test script makes changes to the database by inserting, updating, and deleting records. If you want to get the same results each time you run it, reload the DDL file from step 2 before running the tests again.
+**Important:** Run the test script only against the test database. It calls the RESET procedure to drop and recreate the project tables and load the sample data. You do not need to reload the DDL file between test runs.
 
 ## Expected Output
 
 The script displays the contents of all eight tables under `DATABASE BEFORE TESTS`, followed by PASS or FAIL messages for each check. These checks cover reads, selected columns, filters, insert/update/delete ops, and supplier archiving, restoration, and deletion.
 
-After testing, the script displays the tables again under `DATABASE AFTER TESTS` and compares their contents with the starting data.
+The RESET test inserts a temporary record and deletes a sample record before calling RESET. It checks that the temporary record is gone and all eight tables match the starting data. After testing, the script displays the tables again under `DATABASE AFTER TESTS` and compares their contents with the starting data.
 
 A successful run ends with:
 ```text
@@ -84,13 +86,13 @@ PASS: Orders restored after all tests
 PASS: OrderDetails restored after all tests
 
 TEST RESULTS
-148/148 checks passed
-0/148 checks failed
+161/161 checks passed
+0/161 checks failed
 
 ALL TESTS PASSED
 ```
 
-The complete saved output is available in `CLI_OUT.txt`.
+The complete saved output is available in `CLI_OUT.txt`. The saved run was tested against a separate local MySQL 8.0 test instance.
 
 If a check fails, the script will display its expected and actual results. The final summary lists the failed checks and shows how many checks passed or failed. Unexpected errors are reported separately and mark the run as incomplete. For an incomplete run, the counts include only checks that were executed.
 
@@ -100,12 +102,27 @@ Suppliers use an `is_active` field so they can be archived without deleting thei
 
 The data layer uses `set_supplier_active(supplier_id, False)` to archive a supplier and `set_supplier_active(supplier_id, True)` to restore one. Active suppliers can be selected with `get_suppliers(is_active=True)`.
 
-Permanent supplier deletion requires the supplier to be archived. The database also blocks deletion while inventory items reference that supplier.
+Permanent supplier deletion requires the supplier to be archived. The database also blocks deletion while inventory items reference that supplier, and `delete_supplier()` raises an `IntegrityError` in that case.
 
 Other foreign keys prevent deleting ingredients used by recipes, recipes used by menu items, customers with orders, and menu items referenced by order details. Deleting an otherwise unreferenced recipe removes its recipe-ingredient links. Deleting an order removes its order details.
 
+Each ingredient can only be listed once per recipe. A UNIQUE constraint on `(recipe_id, ingredient_id)` in RecipeIngredients blocks duplicate entries.
+
+## Planned Step 5 Enhancement
+
+We plan to add JOIN queries to make the application output easier to read without looking up foreign key IDs separately.
+
+Essential tasks:
+
+- Add a recipe ingredient report with recipe names, ingredient names, and quantities.
+- Add an order detail report with customer names, order dates, recipe names, quantities, and costs.
+- Add tests for both reports and update the DML reference file.
+
+Optional tasks:
+
+- Add a low-stock inventory report.
+- Add total sales grouped by customer.
+
 ## Citation
 
-This README was drafted with help from Claude (Anthropic, claude.ai) on November 4, 2026. Claude produced an initial draft based on our project files and test output, which we then reviewed and rewrote.
-
-**Prompt:** "I need help with a readme for our repo," along with our project files and draft README.
+Anthropic. (2026). Claude (Opus 5.5) [Large language model]. https://claude.ai/ Accessed 23 Nov 2026. How we used Claude: We used Claude to help us understand the assignment requirements, to produce an initial README draft that we reviewed and rewrote (Nov 4, 2026), and to review our project files against TA feedback and point out errors and inconsistencies (Nov 23, 2026). Our group designed the database, wrote the application and test code, made the corrections, and made all final decisions.

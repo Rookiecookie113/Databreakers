@@ -95,12 +95,8 @@ def test_supplier_changes(db):
 	try:
 		# Create a temp supplier and inventory item
 		result = db._save(
-			"Suppliers",
-			"supplier_id",
-			{
-				"supplier_name": "Test Supplier",
-				"supplier_phone": "541-555-0100"
-			}
+			"sp_insert_supplier",
+			("Test Supplier", "541-555-0100")
 		)
 		supplier_id = result["id"]
 		check(
@@ -117,14 +113,8 @@ def test_supplier_changes(db):
 		)
 		
 		result = db._save(
-			"InventoryItems",
-			"ingredient_id",
-			{
-				"supplier_id": supplier_id,
-				"ingredient_name": "Test Ingredient",
-				"quantity_on_hand": 5,
-				"price_per_unit": Decimal("1.25")
-			}
+			"sp_insert_inventory_item",
+			(supplier_id, "Test Ingredient", 5, Decimal("1.25"))
 		)
 		ingredient_id = result["id"]
 		inventory_rows = db.get_inventory_items()
@@ -183,12 +173,8 @@ def test_supplier_changes(db):
 			[(supplier_id,)]
 		)
 
-		# Connect th temp ingredient to a temp recipe
-		result = db._save(
-			"Recipes",
-			"recipe_id",
-			{"recipe_name": "Test Recipe"}
-		)
+		# Connect the temp ingredient to a temp recipe
+		result = db._save("sp_insert_recipe", ("Test Recipe",))
 		recipe_id = result["id"]
 		result = db.save_recipe_ingredients(recipe_id, ingredient_id, 2)
 		link_id = result["id"]
@@ -236,9 +222,9 @@ def test_supplier_changes(db):
 		# Remove temp references before permanently deleting the supplier
 		db.delete_recipe_ingredients(link_id)
 		link_id = None
-		db._delete("InventoryItems", "ingredient_id", ingredient_id)
+		db._delete("sp_delete_inventory_item", ingredient_id)
 		ingredient_id = None
-		db._delete("Recipes", "recipe_id", recipe_id)
+		db._delete("sp_delete_recipe", recipe_id)
 		recipe_id = None
 		check(
 			"Suppliers archived DELETE row count",
@@ -258,9 +244,9 @@ def test_supplier_changes(db):
 		if link_id is not None:
 			db.delete_recipe_ingredients(link_id)
 		if ingredient_id is not None:
-			db._delete("InventoryItems", "ingredient_id", ingredient_id)
+			db._delete("sp_delete_inventory_item", ingredient_id)
 		if recipe_id is not None:
-			db._delete("Recipes", "recipe_id", recipe_id)
+			db._delete("sp_delete_recipe", recipe_id)
 		if supplier_id is not None:
 			db.set_supplier_active(supplier_id, False)
 			db.delete_supplier(supplier_id)
@@ -299,6 +285,21 @@ def show_database(db, title):
 	
 	return contents
 
+def test_reset(db, original_data):
+	"""Make changes and check that RESET restores all sample data"""
+	result = db.save_recipe_ingredients(2, 1, 5)
+	record_id = result["id"]
+	check("RESET test record created", result["affected_rows"], 1)
+	check("RESET test record exists", len(db.get_recipe_ingredients(recipe_ingredients_id=record_id)), 1)
+	check("RESET sample row deleted", db.delete_order_details(1), 1)
+	check("RESET sample row missing", db.get_order_details(order_details_id=1), [])
+
+	db.reset_database()
+	check("RESET test record removed", db.get_recipe_ingredients(recipe_ingredients_id=record_id), [])
+	reset_data = show_database(db, "DATABASE AFTER RESET")
+	for name in original_data:
+		check(f"RESET restored {name}", reset_data[name], original_data[name])
+
 def main():
 	# Wasn't prompting for username during testing
 	print("MySQL user [root]:", flush=True)
@@ -315,13 +316,14 @@ def main():
 	errors = []
 
 	try:
+		db.reset_database()
 		original_data = show_database(db, "DATABASE BEFORE TESTS")
 
 		read_cases = [
 			("Suppliers", db.get_suppliers, 3, "supplier_id", [("supplier_id", 0), ("is_active", 3)]),
 			("InventoryItems", db.get_inventory_items, 3, "ingredient_id", [("ingredient_id", 0), ("supplier_id", 1)]),
 			("Recipes", db.get_recipes, 3, "recipe_id", [("recipe_id", 0)]),
-			("RecipeIngredients", db.get_recipe_ingredients, 6, "recipe_ingredients_id", [("recipe_ingredients_id", 0), ("recipe_id", 1), ("ingredient_id", 2)]),
+			("RecipeIngredients", db.get_recipe_ingredients, 5, "recipe_ingredients_id", [("recipe_ingredients_id", 0), ("recipe_id", 1), ("ingredient_id", 2)]),
 			("MenuItems", db.get_menu_items, 3, "menu_id", [("menu_id", 0), ("recipe_id", 1), ("availability", 3)]),
 			("Customers", db.get_customers, 3, "customer_id", [("customer_id", 0)]),
 			("Orders", db.get_orders, 3, "order_id", [("order_id", 0), ("customer_id", 1)]),
@@ -381,6 +383,7 @@ def main():
 			}
 		)
 		test_supplier_changes(db)
+		test_reset(db, original_data)
 	except Exception as e:
 		errors.append(f"Test run: {type(e).__name__}: {e}")
 	finally:
