@@ -1,15 +1,27 @@
 -- Flameback Catering - Inventory Management System
--- CS 340 Project Step 2, Group 12
+-- CS 340 Project Step 4, Group 12
 -- Hurrsh Misttry, Tetsuya Bassler, Allen Dickey
 
-SET FOREIGN_KEY_CHECKS = 0;
+DROP PROCEDURE IF EXISTS sp_reset_database;
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_reset_database()
+BEGIN
+	DROP TABLE IF EXISTS OrderDetails;
+	DROP TABLE IF EXISTS Orders;
+	DROP TABLE IF EXISTS Customers;
+	DROP TABLE IF EXISTS MenuItems;
+	DROP TABLE IF EXISTS RecipeIngredients;
+	DROP TABLE IF EXISTS Recipes;
+	DROP TABLE IF EXISTS InventoryItems;
+	DROP TABLE IF EXISTS Suppliers;
 
 -- =========================================================
 -- TABLE DEFINITIONS
 -- =========================================================
 
 -- Suppliers: vendors that provide ingredients
-DROP TABLE IF EXISTS Suppliers;
 
 CREATE TABLE Suppliers (
 	supplier_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -21,7 +33,6 @@ CREATE TABLE Suppliers (
 
 -- InventoryItems: ingredients and their current stock levels.
 -- Each inventory item belongs to exactly one supplier.
-DROP TABLE IF EXISTS InventoryItems;
 
 CREATE TABLE InventoryItems (
 	ingredient_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -45,7 +56,6 @@ CREATE TABLE InventoryItems (
 );
 
 -- Recipes: recipes used to prepare menu items.
-DROP TABLE IF EXISTS Recipes;
 
 CREATE TABLE Recipes (
 	recipe_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -55,8 +65,6 @@ CREATE TABLE Recipes (
 
 -- RecipeIngredients: connects recipes to inventory items
 -- and records the quantity of each ingredient required.
-DROP TABLE IF EXISTS RecipeIngredients;
-
 CREATE TABLE RecipeIngredients (
 	recipe_ingredients_id INT(11) NOT NULL AUTO_INCREMENT,
 	recipe_id INT(11) NOT NULL,
@@ -82,7 +90,6 @@ CREATE TABLE RecipeIngredients (
 
 -- MenuItems: items offered for sale, their current prices,
 -- and whether they are currently available.
-DROP TABLE IF EXISTS MenuItems;
 
 CREATE TABLE MenuItems (
 	menu_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -102,7 +109,6 @@ CREATE TABLE MenuItems (
 );
 
 -- Customers: customers who can place catering orders.
-DROP TABLE IF EXISTS Customers;
 
 CREATE TABLE Customers (
 	customer_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -111,7 +117,6 @@ CREATE TABLE Customers (
 );
 
 -- Orders: records each order's customer and date.
-DROP TABLE IF EXISTS Orders;
 
 CREATE TABLE Orders (
 	order_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -129,7 +134,6 @@ CREATE TABLE Orders (
 -- OrderDetails: connects orders to the menu items purchased.
 -- total_cost stores the line total at the time of purchase,
 -- preserving it if the current menu price changes later.
-DROP TABLE IF EXISTS OrderDetails;
 
 CREATE TABLE OrderDetails (
 	order_details_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -161,7 +165,6 @@ CREATE TABLE OrderDetails (
 -- =========================================================
 -- SAMPLE DATA
 -- =========================================================
-SET FOREIGN_KEY_CHECKS = 1;
 START TRANSACTION;
 
 -- Suppliers
@@ -236,3 +239,9 @@ VALUES
 
 -- closing
 COMMIT;
+
+END $$
+
+DELIMITER ;
+
+CALL sp_reset_database();

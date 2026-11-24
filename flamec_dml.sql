@@ -1,4 +1,6 @@
 -- :name placeholders represent values supplied by the application
+-- CUD queries are implemented in flamec_plsql.sql as stored procedures.
+-- SELECT queries are executed directly by flamec_crud.py.
 
 -- =========================================================
 -- READ ALL TABLES
@@ -78,17 +80,6 @@ UPDATE Suppliers
 SET is_active = TRUE
 WHERE supplier_id = :supplier_id;
 
--- Update an inventory item to use an active supplier
-UPDATE InventoryItems
-SET supplier_id = :supplier_id
-WHERE ingredient_id = :ingredient_id
-AND EXISTS (
-	SELECT 1
-	FROM Suppliers
-	WHERE supplier_id = :supplier_id
-	AND is_active = TRUE
-);
-
 -- Delete an archived supplier if no inventory items reference it
 DELETE FROM Suppliers
 WHERE supplier_id = :supplier_id
@@ -132,3 +123,17 @@ WHERE order_details_id = :order_details_id;
 -- Delete an order detail from the OrderDetails intersection table
 DELETE FROM OrderDetails
 WHERE order_details_id = :order_details_id;
+
+-- Additional queries used to create and clean up supplier test records
+INSERT INTO Suppliers (supplier_name, supplier_phone)
+VALUES (:supplier_name, :supplier_phone);
+
+INSERT INTO InventoryItems (supplier_id, ingredient_name, quantity_on_hand, price_per_unit)
+VALUES (:supplier_id, :ingredient_name, :quantity_on_hand, :price_per_unit);
+
+INSERT INTO Recipes (recipe_name)
+VALUES (:recipe_name);
+
+DELETE FROM InventoryItems WHERE ingredient_id = :ingredient_id;
+
+DELETE FROM Recipes WHERE recipe_id = :recipe_id;
