@@ -323,7 +323,7 @@ def main():
 			("Suppliers", db.get_suppliers, 3, "supplier_id", [("supplier_id", 0), ("is_active", 3)]),
 			("InventoryItems", db.get_inventory_items, 3, "ingredient_id", [("ingredient_id", 0), ("supplier_id", 1)]),
 			("Recipes", db.get_recipes, 3, "recipe_id", [("recipe_id", 0)]),
-			("RecipeIngredients", db.get_recipe_ingredients, 6, "recipe_ingredients_id", [("recipe_ingredients_id", 0), ("recipe_id", 1), ("ingredient_id", 2)]),
+			("RecipeIngredients", db.get_recipe_ingredients, 5, "recipe_ingredients_id", [("recipe_ingredients_id", 0), ("recipe_id", 1), ("ingredient_id", 2)]),
 			("MenuItems", db.get_menu_items, 3, "menu_id", [("menu_id", 0), ("recipe_id", 1), ("availability", 3)]),
 			("Customers", db.get_customers, 3, "customer_id", [("customer_id", 0)]),
 			("Orders", db.get_orders, 3, "order_id", [("order_id", 0), ("customer_id", 1)]),

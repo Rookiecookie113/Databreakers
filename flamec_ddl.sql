@@ -72,6 +72,9 @@ CREATE TABLE RecipeIngredients (
 	quantity_needed INT(11) NOT NULL,
 	PRIMARY KEY (recipe_ingredients_id),
 
+	CONSTRAINT uq_recipeingredients_recipe_ingredient
+		UNIQUE (recipe_id, ingredient_id),
+
 	CONSTRAINT fk_recipeingredients_recipe
 		FOREIGN KEY (recipe_id)
 		REFERENCES Recipes (recipe_id)
@@ -179,9 +182,9 @@ VALUES
 -- InventoryItems
 INSERT INTO InventoryItems (ingredient_id, supplier_id, ingredient_name, quantity_on_hand, price_per_unit)
 VALUES
-	(1, 1, 'Chicken Fillet', 12, 5.50),
-	(2, 2, 'Potatoes', 25, 1.25),
-	(3, 2, 'Onions', 45, 0.75);
+	(1, (SELECT supplier_id FROM Suppliers WHERE supplier_name = 'Valley Poultry'), 'Chicken Fillet', 12, 5.50),
+	(2, (SELECT supplier_id FROM Suppliers WHERE supplier_name = 'Benton Produce'), 'Potatoes', 25, 1.25),
+	(3, (SELECT supplier_id FROM Suppliers WHERE supplier_name = 'Benton Produce'), 'Onions', 45, 0.75);
 
 -- Recipes
 INSERT INTO Recipes (recipe_id, recipe_name)
@@ -195,19 +198,23 @@ VALUES
 -- Ingredients can be shared by multiple recipes.
 INSERT INTO RecipeIngredients (recipe_ingredients_id, recipe_id, ingredient_id, quantity_needed)
 VALUES
-	(1, 1, 1, 2),
-	(2, 2, 2, 1),
-	(3, 3, 3, 4),
-	(4, 1, 2, 1),
-	(5, 1, 3, 1),
-	(6, 3, 1, 2);
+	(1, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'Ultimate Stuffed Baked Potato'),
+		(SELECT ingredient_id FROM InventoryItems WHERE ingredient_name = 'Chicken Fillet'), 2),
+	(2, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'French Fry'),
+		(SELECT ingredient_id FROM InventoryItems WHERE ingredient_name = 'Potatoes'), 1),
+	(3, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'Chicken Curry'),
+		(SELECT ingredient_id FROM InventoryItems WHERE ingredient_name = 'Onions'), 4),
+	(4, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'Ultimate Stuffed Baked Potato'),
+		(SELECT ingredient_id FROM InventoryItems WHERE ingredient_name = 'Potatoes'), 1),
+	(5, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'Ultimate Stuffed Baked Potato'),
+		(SELECT ingredient_id FROM InventoryItems WHERE ingredient_name = 'Onions'), 1);
 
 -- MenuItems
 INSERT INTO MenuItems (menu_id, recipe_id, price, availability)
 VALUES
-	(1, 1, 4.50, TRUE),
-	(2, 2, 2.75, TRUE),
-	(3, 3, 6.99, TRUE);
+	(1, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'Ultimate Stuffed Baked Potato'), 4.50, TRUE),
+	(2, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'French Fry'), 2.75, TRUE),
+	(3, (SELECT recipe_id FROM Recipes WHERE recipe_name = 'Chicken Curry'), 6.99, TRUE);
 
 -- Customers
 -- Joann Takarini has not placed any orders yet.
@@ -221,9 +228,9 @@ VALUES
 -- Alfonso Guachelle has placed two orders.
 INSERT INTO Orders (order_id, customer_id, order_date)
 VALUES
-	(1, 1, '2025-10-23'),
-	(2, 2, '2025-11-02'),
-	(3, 1, '2025-12-05');
+	(1, (SELECT customer_id FROM Customers WHERE customer_name = 'Alfonso Guachelle'), '2025-10-23'),
+	(2, (SELECT customer_id FROM Customers WHERE customer_name = 'Hardy McSnikerson'), '2025-11-02'),
+	(3, (SELECT customer_id FROM Customers WHERE customer_name = 'Alfonso Guachelle'), '2025-12-05');
 
 -- OrderDetails
 -- Orders 1 and 3 contain multiple menu items.
@@ -231,11 +238,26 @@ VALUES
 -- total_cost records each line's price at purchase time.
 INSERT INTO OrderDetails (order_details_id, order_id, menu_id, quantity_ordered, total_cost)
 VALUES
-	(1, 1, 1, 2, 9.00),
-	(2, 2, 2, 1, 2.75),
-	(3, 3, 3, 3, 20.97),
-	(4, 1, 2, 2, 5.50),
-	(5, 3, 1, 1, 4.50);
+	(1, (SELECT o.order_id FROM Orders o JOIN Customers c ON o.customer_id = c.customer_id
+			WHERE c.customer_name = 'Alfonso Guachelle' AND o.order_date = '2025-10-23'),
+		(SELECT m.menu_id FROM MenuItems m JOIN Recipes r ON m.recipe_id = r.recipe_id
+			WHERE r.recipe_name = 'Ultimate Stuffed Baked Potato'), 2, 9.00),
+	(2, (SELECT o.order_id FROM Orders o JOIN Customers c ON o.customer_id = c.customer_id
+			WHERE c.customer_name = 'Hardy McSnikerson' AND o.order_date = '2025-11-02'),
+		(SELECT m.menu_id FROM MenuItems m JOIN Recipes r ON m.recipe_id = r.recipe_id
+			WHERE r.recipe_name = 'French Fry'), 1, 2.75),
+	(3, (SELECT o.order_id FROM Orders o JOIN Customers c ON o.customer_id = c.customer_id
+			WHERE c.customer_name = 'Alfonso Guachelle' AND o.order_date = '2025-12-05'),
+		(SELECT m.menu_id FROM MenuItems m JOIN Recipes r ON m.recipe_id = r.recipe_id
+			WHERE r.recipe_name = 'Chicken Curry'), 3, 20.97),
+	(4, (SELECT o.order_id FROM Orders o JOIN Customers c ON o.customer_id = c.customer_id
+			WHERE c.customer_name = 'Alfonso Guachelle' AND o.order_date = '2025-10-23'),
+		(SELECT m.menu_id FROM MenuItems m JOIN Recipes r ON m.recipe_id = r.recipe_id
+			WHERE r.recipe_name = 'French Fry'), 2, 5.50),
+	(5, (SELECT o.order_id FROM Orders o JOIN Customers c ON o.customer_id = c.customer_id
+			WHERE c.customer_name = 'Alfonso Guachelle' AND o.order_date = '2025-12-05'),
+		(SELECT m.menu_id FROM MenuItems m JOIN Recipes r ON m.recipe_id = r.recipe_id
+			WHERE r.recipe_name = 'Ultimate Stuffed Baked Potato'), 1, 4.50);
 
 -- closing
 COMMIT;

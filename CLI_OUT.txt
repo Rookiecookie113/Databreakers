@@ -23,7 +23,6 @@ RecipeIngredients:
 (3, 3, 3, 4)
 (4, 1, 2, 1)
 (5, 1, 3, 1)
-(6, 3, 1, 2)
 
 MenuItems:
 (1, 1, Decimal('4.50'), 1)
@@ -153,9 +152,9 @@ PASS: OrderDetails missing primary key
 PASS: MenuItems availability=False
 PASS: Suppliers named columns
 PASS: RecipeIngredients INSERT row count
-PASS: RecipeIngredients after INSERT: [(7, 2, 1, 5)]
+PASS: RecipeIngredients after INSERT: [(6, 2, 1, 5)]
 PASS: RecipeIngredients UPDATE result
-PASS: RecipeIngredients after UPDATE: [(7, 2, 1, 10)]
+PASS: RecipeIngredients after UPDATE: [(6, 2, 1, 10)]
 PASS: RecipeIngredients DELETED row count
 PASS: RecipeIngredients after DELETE: []
 PASS: RecipeIngredients original data preserved
@@ -215,7 +214,6 @@ RecipeIngredients:
 (3, 3, 3, 4)
 (4, 1, 2, 1)
 (5, 1, 3, 1)
-(6, 3, 1, 2)
 
 MenuItems:
 (1, 1, Decimal('4.50'), 1)
@@ -270,7 +268,6 @@ RecipeIngredients:
 (3, 3, 3, 4)
 (4, 1, 2, 1)
 (5, 1, 3, 1)
-(6, 3, 1, 2)
 
 MenuItems:
 (1, 1, Decimal('4.50'), 1)
